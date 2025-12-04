@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Smart LCD Monitoring System</title>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🌍 Smart LCD Monitoring System</h1>
+            <p class="subtitle">Real-time Environmental Data</p>
+        </header>
+
+        <div class="location-bar">
+            <div class="location-info">
+                <span class="location-icon">📍</span>
+                <span class="location-name" id="city">Loading...</span>
+            </div>
+            <div class="timestamp">
+                <span class="clock-icon">🕐</span>
+                <span id="time">--</span>
+            </div>
+        </div>
+
+        <div class="coordinates-bar">
+            <span class="coord-label">Latitude:</span>
+            <span class="coord-value" id="lat">--</span>
+            <span class="coord-separator">|</span>
+            <span class="coord-label">Longitude:</span>
+            <span class="coord-value" id="lon">--</span>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon temperature">🌡️</div>
+                <div class="metric-label">Temperature</div>
+                <div class="metric-value" id="temp">--</div>
+                <div class="metric-unit">°C</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon humidity">💧</div>
+                <div class="metric-label">Humidity</div>
+                <div class="metric-value" id="hum">--</div>
+                <div class="metric-unit">%</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon pressure">🎚️</div>
+                <div class="metric-label">Pressure</div>
+                <div class="metric-value" id="pressure">--</div>
+                <div class="metric-unit">hPa</div>
+            </div>
+
+            <div class="metric-card featured">
+                <div class="metric-icon pm25">💨</div>
+                <div class="metric-label">PM2.5 Particles</div>
+                <div class="metric-value" id="pm25">--</div>
+                <div class="metric-unit">µg/m³</div>
+                <div class="quality-badge" id="pm25-quality">--</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon gas">🔬</div>
+                <div class="metric-label">Air Quality Sensor</div>
+                <div class="metric-value" id="co2">--</div>
+                <div class="metric-unit">MQ135 Raw Value</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon light">💡</div>
+                <div class="metric-label">Light Intensity</div>
+                <div class="metric-value" id="ldr">--</div>
+                <div class="metric-unit">LDR Raw Value</div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>Auto-refresh every 2 seconds</p>
+        </footer>
+    </div>
+
+    <script>
+        function getAirQualityStatus(pm25Value) {
+            if (pm25Value <= 12) return { text: 'Good', color: '#00e400' };
+            if (pm25Value <= 35.4) return { text: 'Moderate', color: '#ffff00' };
+            if (pm25Value <= 55.4) return { text: 'Unhealthy for Sensitive', color: '#ff7e00' };
+            if (pm25Value <= 150.4) return { text: 'Unhealthy', color: '#ff0000' };
+            if (pm25Value <= 250.4) return { text: 'Very Unhealthy', color: '#8f3f97' };
+            return { text: 'Hazardous', color: '#7e0023' };
+        }
+
+        function updateData() {
+            fetch("/data")
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("city").innerText = data.city || '--';
+                    document.getElementById("temp").innerText = data.temp || '--';
+                    document.getElementById("hum").innerText = data.hum || '--';
+                    document.getElementById("pressure").innerText = data.pressure || '--';
+                    document.getElementById("co2").innerText = data.co2 || '--';
+                    document.getElementById("ldr").innerText = data.ldr || '--';
+                    document.getElementById("time").innerText = data.time || '--';
+                    document.getElementById("lat").innerText = data.lat ? data.lat.toFixed(6) : '--';
+                    document.getElementById("lon").innerText = data.lon ? data.lon.toFixed(6) : '--';
+                    
+                    const pm25Value = parseFloat(data.pm25);
+                    document.getElementById("pm25").innerText = data.pm25 || '--';
+                    
+                    if (!isNaN(pm25Value)) {
+                        const quality = getAirQualityStatus(pm25Value);
+                        const badge = document.getElementById("pm25-quality");
+                        badge.innerText = quality.text;
+                        badge.style.backgroundColor = quality.color;
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        updateData();
+        
+        setInterval(updateData, 2000);
+    </script>
+</body>
+</html>
